@@ -2,11 +2,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+// client único para este arquivo
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // server-only
 const supabase = createClient(url, serviceKey);
 
-// GET /api/leads/:id  -> retorna 1 lead
+// GET /api/leads/:id -> retorna 1 lead
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
@@ -36,40 +37,11 @@ export async function GET(
   }
 }
 
-// DELETE /api/leads/:id  -> apaga 1 lead
-export async function DELETE(
-  _req: Request,
+// PUT /api/leads/:id -> atualiza um lead existente
+export async function PUT(
+  req: Request,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const { id } = params;
-
-    const { error } = await supabase.from("leads").delete().eq("id", id);
-
-    if (error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json({ success: true, id }, { status: 200 });
-  } catch (e: any) {
-    return NextResponse.json(
-      { success: false, error: e.message ?? "Unknown error" },
-      { status: 500 }
-    );
-  }
-}
-// PUT /api/leads/:id  -> atualiza um lead existente
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(url, serviceKey);
-
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
     const body = await req.json();
@@ -89,10 +61,39 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       .single();
 
     if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({ success: true, lead: data }, { status: 200 });
+  } catch (e: any) {
+    return NextResponse.json(
+      { success: false, error: e.message ?? "Unknown error" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/leads/:id -> apaga 1 lead
+export async function DELETE(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params;
+
+    const { error } = await supabase.from("leads").delete().eq("id", id);
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ success: true, id }, { status: 200 });
   } catch (e: any) {
     return NextResponse.json(
       { success: false, error: e.message ?? "Unknown error" },
