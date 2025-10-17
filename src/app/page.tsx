@@ -1683,10 +1683,11 @@ export default function IngoCRM() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+    );
+}
 
-  const DashboardContent = () => (
-      // ---- Contadores de Leads (Supabase + Realtime) ----
+  const DashboardContent = () => {
+  // ---- Contadores de Leads (Supabase + Realtime) ----
   const [leadStats, setLeadStats] = useState({
     total: 0,
     approved: 0,
