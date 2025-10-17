@@ -178,6 +178,51 @@ const analyticsData = {
 }
 
 export default function IngoCRM() {
+  // --- INÍCIO: contadores de Leads (Supabase + Realtime) ---
+  const [leadStats, setLeadStats] = useState({
+    total: 0,
+    approved: 0,
+    rejected: 0,
+    callback: 0,
+    spam: 0,
+    verification: 0,
+  });
+
+  useEffect(() => {
+    async function loadStats() {
+      const { data, error } = await supabase.from("leads").select("status");
+      if (error) {
+        console.error("Erro ao carregar leads:", error);
+        return;
+      }
+      const counts = {
+        total: data.length,
+        approved: data.filter((l) => l.status === "approved").length,
+        rejected: data.filter((l) => l.status === "rejected").length,
+        callback: data.filter((l) => l.status === "callback").length,
+        spam: data.filter((l) => l.status === "spam").length,
+        verification: data.filter((l) => l.status === "verification").length,
+      };
+      setLeadStats(counts);
+    }
+
+    loadStats();
+
+    const subscription = supabase
+      .channel("realtime-dashboard")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "leads" },
+        () => loadStats()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
+  // --- FIM: contadores de Leads (Supabase + Realtime) ---
+
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [searchTerm, setSearchTerm] = useState('')
