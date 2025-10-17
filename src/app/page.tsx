@@ -1958,8 +1958,8 @@ export default function IngoCRM() {
           </div>
               </CardContent>
     </Card>
-  );
-}
+    );
+);
 
 const LeadsContent = () => (
     <div className="space-y-6">
