@@ -1957,7 +1957,10 @@ export default function IngoCRM() {
             ))}
           </div>
               </CardContent>
-    // ================== LEADS CONTENT ==================
+);
+}; // fecha o componente anterior
+
+// ================== LEADS CONTENT ==================
 const LeadsContent = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isNewLeadOpen, setIsNewLeadOpen] = useState(false);
