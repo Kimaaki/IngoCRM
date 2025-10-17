@@ -1956,10 +1956,10 @@ export default function IngoCRM() {
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
-    </div>
-);
+              </CardContent>
+    </Card>
+  );
+}
 
 const LeadsContent = () => (
     <div className="space-y-6">
