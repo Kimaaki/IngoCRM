@@ -1959,9 +1959,9 @@ export default function IngoCRM() {
         </CardContent>
       </Card>
     </div>
-  )
+);
 
-  const LeadsContent = () => (
+const LeadsContent = () => (
     <div className="space-y-6">
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
