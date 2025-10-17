@@ -15,6 +15,16 @@ export default function LeadsDashboard() {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // --- Contadores de status ---
+  const [stats, setStats] = useState({
+    total: 0,
+    approved: 0,
+    rejected: 0,
+    callback: 0,
+    spam: 0,
+    verification: 0,
+  });
+
   // Função para buscar leads
   async function fetchLeads() {
     setLoading(true);
@@ -39,10 +49,25 @@ export default function LeadsDashboard() {
     else fetchLeads();
   }
 
+  // Atualizar contadores automaticamente
+  useEffect(() => {
+    if (leads.length > 0) {
+      const counts = {
+        total: leads.length,
+        approved: leads.filter((l) => l.status === "approved").length,
+        rejected: leads.filter((l) => l.status === "rejected").length,
+        callback: leads.filter((l) => l.status === "callback").length,
+        spam: leads.filter((l) => l.status === "spam").length,
+        verification: leads.filter((l) => l.status === "verification").length,
+      };
+      setStats(counts);
+    }
+  }, [leads]);
+
+  // Efeito para carregar e ouvir alterações em tempo real
   useEffect(() => {
     fetchLeads();
 
-    // Realtime updates
     const subscription = supabase
       .channel("leads-changes")
       .on(
@@ -63,6 +88,46 @@ export default function LeadsDashboard() {
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">📋 Leads Dashboard</h1>
+
+      {/* Painel de contadores */}
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <Card className="p-4">
+          <CardHeader className="text-center">
+            <h2 className="font-semibold">Total</h2>
+            <p className="text-2xl font-bold">{stats.total}</p>
+          </CardHeader>
+        </Card>
+        <Card className="p-4">
+          <CardHeader className="text-center text-green-600">
+            <h2 className="font-semibold">Approved</h2>
+            <p className="text-2xl font-bold">{stats.approved}</p>
+          </CardHeader>
+        </Card>
+        <Card className="p-4">
+          <CardHeader className="text-center text-red-600">
+            <h2 className="font-semibold">Rejected</h2>
+            <p className="text-2xl font-bold">{stats.rejected}</p>
+          </CardHeader>
+        </Card>
+        <Card className="p-4">
+          <CardHeader className="text-center text-yellow-500">
+            <h2 className="font-semibold">Callback</h2>
+            <p className="text-2xl font-bold">{stats.callback}</p>
+          </CardHeader>
+        </Card>
+        <Card className="p-4">
+          <CardHeader className="text-center text-gray-500">
+            <h2 className="font-semibold">Spam</h2>
+            <p className="text-2xl font-bold">{stats.spam}</p>
+          </CardHeader>
+        </Card>
+        <Card className="p-4">
+          <CardHeader className="text-center text-blue-600">
+            <h2 className="font-semibold">Verification</h2>
+            <p className="text-2xl font-bold">{stats.verification}</p>
+          </CardHeader>
+        </Card>
+      </div>
 
       {loading ? (
         <p>Carregando leads...</p>
@@ -104,7 +169,7 @@ export default function LeadsDashboard() {
                 </p>
 
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {["approved", "rejected", "spam", "callback", "new"].map(
+                  {["approved", "rejected", "spam", "callback", "verification"].map(
                     (status) => (
                       <Button
                         key={status}
