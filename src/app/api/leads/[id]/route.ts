@@ -61,3 +61,42 @@ export async function DELETE(
     );
   }
 }
+// PUT /api/leads/:id  -> atualiza um lead existente
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(url, serviceKey);
+
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+    const body = await req.json();
+
+    const { data, error } = await supabase
+      .from("leads")
+      .update({
+        name: body.name,
+        phone: body.phone,
+        email: body.email,
+        country: body.country,
+        source: body.source,
+        status: body.status,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true, lead: data }, { status: 200 });
+  } catch (e: any) {
+    return NextResponse.json(
+      { success: false, error: e.message ?? "Unknown error" },
+      { status: 500 }
+    );
+  }
+}
