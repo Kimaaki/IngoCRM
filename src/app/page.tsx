@@ -1686,19 +1686,120 @@ export default function IngoCRM() {
   )
 
   const DashboardContent = () => (
+      // ---- Contadores de Leads (Supabase + Realtime) ----
+  const [leadStats, setLeadStats] = useState({
+    total: 0,
+    approved: 0,
+    rejected: 0,
+    callback: 0,
+    spam: 0,
+    verification: 0,
+  });
+
+  useEffect(() => {
+    async function loadStats() {
+      const { data, error } = await supabase.from("leads").select("status");
+      if (error) {
+        console.error("Erro ao carregar leads:", error);
+        return;
+      }
+
+      const counts = {
+        total: data.length,
+        approved: data.filter((l) => l.status === "approved").length,
+        rejected: data.filter((l) => l.status === "rejected").length,
+        callback: data.filter((l) => l.status === "callback").length,
+        spam: data.filter((l) => l.status === "spam").length,
+        verification: data.filter((l) => l.status === "verification").length,
+      };
+      setLeadStats(counts);
+    }
+
+    loadStats();
+
+    const sub = supabase
+      .channel("realtime-dashboard")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "leads" },
+        () => loadStats()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(sub);
+    };
+  }, []);
+  // ---- FIM: Contadores de Leads ----
+
     <div className="space-y-6">
       {/* Enhanced Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Leads</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.total_leads}</div>
-            <p className="text-xs text-muted-foreground">+12% from last month</p>
-          </CardContent>
-        </Card>
+       <Card>
+  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+    <CardTitle className="text-sm font-medium">Total Leads (ao vivo)</CardTitle>
+    <Target className="h-4 w-4 text-muted-foreground" />
+  </CardHeader>
+  <CardContent>
+    <div className="text-2xl font-bold">{leadStats.total}</div>
+    <p className="text-xs text-muted-foreground">
+      Atualizado em tempo real via Supabase
+    </p>
+  </CardContent>
+</Card>
+
+{/* --- Status dos Leads (ao vivo) --- */}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">Approved</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{leadStats.approved}</div>
+      <p className="text-xs text-muted-foreground">Leads aprovados</p>
+    </CardContent>
+  </Card>
+
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{leadStats.rejected}</div>
+      <p className="text-xs text-muted-foreground">Leads rejeitados</p>
+    </CardContent>
+  </Card>
+
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">Callback</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{leadStats.callback}</div>
+      <p className="text-xs text-muted-foreground">Aguardando retorno</p>
+    </CardContent>
+  </Card>
+
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">Spam</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{leadStats.spam}</div>
+      <p className="text-xs text-muted-foreground">Marcados como spam</p>
+    </CardContent>
+  </Card>
+
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">Verification</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{leadStats.verification}</div>
+      <p className="text-xs text-muted-foreground">Em verificação</p>
+    </CardContent>
+  </Card>
+</div>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
