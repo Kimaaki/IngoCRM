@@ -1957,11 +1957,25 @@ export default function IngoCRM() {
             ))}
           </div>
               </CardContent>
-    </Card>
-    );
-);
+    // ================== LEADS CONTENT ==================
+const LeadsContent = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isNewLeadOpen, setIsNewLeadOpen] = useState(false);
+  const [newLead, setNewLead] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+    source: "",
+    value: "",
+    notes: "",
+  });
 
-const LeadsContent = () => (
+  const handleCreateLead = async () => {
+    // lógica de criação do lead
+  };
+
+  return (
     <div className="space-y-6">
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
@@ -1984,12 +1998,10 @@ const LeadsContent = () => (
             Export
           </Button>
         </div>
-        
         <Dialog open={isNewLeadOpen} onOpenChange={setIsNewLeadOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              New Lead
+              <Plus className="h-4 w-4 mr-2" /> New Lead
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
@@ -1999,49 +2011,57 @@ const LeadsContent = () => (
                 Add a new lead to your pipeline. Fill in the details below.
               </DialogDescription>
             </DialogHeader>
+
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">Name</Label>
                 <Input
                   id="name"
                   value={newLead.name}
-                  onChange={(e) => setNewLead({...newLead, name: e.target.value})}
+                  onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
                   className="col-span-3"
                 />
               </div>
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="email" className="text-right">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={newLead.email}
-                  onChange={(e) => setNewLead({...newLead, email: e.target.value})}
+                  onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
                   className="col-span-3"
                 />
               </div>
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="phone" className="text-right">Phone</Label>
                 <Input
                   id="phone"
                   value={newLead.phone}
-                  onChange={(e) => setNewLead({...newLead, phone: e.target.value})}
+                  onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
                   className="col-span-3"
                 />
               </div>
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="company" className="text-right">Company</Label>
                 <Input
                   id="company"
                   value={newLead.company}
-                  onChange={(e) => setNewLead({...newLead, company: e.target.value})}
+                  onChange={(e) => setNewLead({ ...newLead, company: e.target.value })}
                   className="col-span-3"
                 />
               </div>
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="source" className="text-right">Source</Label>
-                <Select value={newLead.source} onValueChange={(value) => setNewLead({...newLead, source: value})}>
+                <Select
+                  value={newLead.source}
+                  onValueChange={(value) => setNewLead({ ...newLead, source: value })}
+                >
                   <SelectTrigger className="col-span-3">
-                    <SelectValue />
+                    <SelectValue placeholder="Select source" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="website">Website</SelectItem>
@@ -2053,26 +2073,29 @@ const LeadsContent = () => (
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="value" className="text-right">Value</Label>
                 <Input
                   id="value"
                   type="number"
                   value={newLead.value}
-                  onChange={(e) => setNewLead({...newLead, value: e.target.value})}
+                  onChange={(e) => setNewLead({ ...newLead, value: e.target.value })}
                   className="col-span-3"
                 />
               </div>
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="notes" className="text-right">Notes</Label>
                 <Textarea
                   id="notes"
                   value={newLead.notes}
-                  onChange={(e) => setNewLead({...newLead, notes: e.target.value})}
+                  onChange={(e) => setNewLead({ ...newLead, notes: e.target.value })}
                   className="col-span-3"
                 />
               </div>
             </div>
+
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setIsNewLeadOpen(false)}>
                 Cancel
@@ -2090,35 +2113,20 @@ const LeadsContent = () => (
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Lead
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Company
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Value
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Source
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Assigned
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
+
               <tbody className="bg-white divide-y divide-gray-200">
                 {leads.map((lead) => {
-                  const assignedUser = mockUsers.find(u => u.id === lead.assigned_to)
+                  const assignedUser = mockUsers.find(u => u.id === lead.assigned_to);
                   return (
                     <tr key={lead.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -2127,20 +2135,14 @@ const LeadsContent = () => (
                           <div className="text-sm text-gray-500">{lead.email}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {lead.company}
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{lead.company}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge className={getStatusColor(lead.status)}>
-                          {lead.status}
-                        </Badge>
+                        <Badge className={getStatusColor(lead.status)}>{lead.status}</Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {lead.value ? formatCurrency(lead.value) : '-'}
+                        {lead.value ? formatCurrency(lead.value) : "-"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {lead.source}
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{lead.source}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {assignedUser && (
                           <div className="flex items-center">
@@ -2159,11 +2161,7 @@ const LeadsContent = () => (
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleEdit(lead, 'lead')}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => handleEdit(lead, "lead")}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm">
@@ -2175,7 +2173,7 @@ const LeadsContent = () => (
                         </div>
                       </td>
                     </tr>
-                  )
+                  );
                 })}
               </tbody>
             </table>
@@ -2183,7 +2181,8 @@ const LeadsContent = () => (
         </CardContent>
       </Card>
     </div>
-  )
+  );
+};
 
   const OrdersContent = () => {
     // If showing order detail, render the detail page
