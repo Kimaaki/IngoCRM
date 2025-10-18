@@ -953,7 +953,7 @@ const TicketsContent = () => (
 /* ============================
    Página principal
 ============================= */
-export default function IngoCRM() {
+export default function ECentril() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<
     | "dashboard"
