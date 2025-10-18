@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +14,7 @@ const supabase = createClient(
 );
 
 export default function LeadsPage() {
+  const router = useRouter();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -47,7 +49,10 @@ export default function LeadsPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "leads" },
-        () => fetchLeads()
+        (payload) => {
+          console.log("Mudança detectada:", payload);
+          fetchLeads();
+        }
       )
       .subscribe();
 
@@ -56,7 +61,7 @@ export default function LeadsPage() {
     };
   }, []);
 
-  // Filtrar leads
+  // Filtrar leads pelo nome/email/telefone
   const filteredLeads = leads.filter(
     (lead) =>
       lead.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -97,11 +102,7 @@ export default function LeadsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredLeads.map((lead) => (
-            <Card
-              key={lead.id}
-              onClick={() => (window.location.href = `/leads/${lead.id}`)}
-              className="p-4 shadow-md cursor-pointer hover:shadow-lg transition"
-            >
+            <Card key={lead.id} className="p-4 shadow-md">
               <CardContent>
                 <div className="flex justify-between items-center">
                   <h2 className="font-semibold text-lg">{lead.name || "Sem nome"}</h2>
@@ -123,22 +124,38 @@ export default function LeadsPage() {
                   })}
                 </p>
 
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {["new", "approved", "rejected", "callback", "spam", "verification"].map(
-                    (status) => (
-                      <Button
-                        key={status}
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation(); // evita abrir o lead ao clicar num botão
-                          updateStatus(lead.id, status);
-                        }}
-                      >
-                        {status}
-                      </Button>
-                    )
-                  )}
+                {/* Botões de ação */}
+                <div className="flex justify-between items-center mt-4">
+                  <div className="flex flex-wrap gap-2">
+                    {["new", "approved", "rejected", "callback", "spam", "verification"].map(
+                      (status) => (
+                        <Button
+                          key={status}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateStatus(lead.id, status)}
+                        >
+                          {status}
+                        </Button>
+                      )
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => router.push(`/leads/${lead.id}`)}
+                    >
+                      👁️ Ver
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => router.push(`/leads/${lead.id}?edit=true`)}
+                    >
+                      ✏️ Editar
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
