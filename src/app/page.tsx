@@ -183,13 +183,17 @@ const analyticsData = {
 export default function IngoCRM() {
   // --- INÍCIO: contadores de Leads (Supabase + Realtime) ---
   const [leadStats, setLeadStats] = useState({
-    total: 0,
-    approved: 0,
-    rejected: 0,
-    callback: 0,
-    spam: 0,
-    verification: 0,
-  });
+  total: 0,
+  new: 0,
+  processing: 0,
+  approved: 0,
+  rejected: 0,
+  callback: 0,
+  spam: 0,
+  verification: 0,
+  delivered: 0,
+  returned: 0,
+});
 
   useEffect(() => {
     async function loadStats() {
@@ -199,13 +203,18 @@ export default function IngoCRM() {
         return;
       }
       const counts = {
-        total: data.length,
-        approved: data.filter((l) => l.status === "approved").length,
-        rejected: data.filter((l) => l.status === "rejected").length,
-        callback: data.filter((l) => l.status === "callback").length,
-        spam: data.filter((l) => l.status === "spam").length,
-        verification: data.filter((l) => l.status === "verification").length,
-      };
+  total: data.length,
+  new: data.filter((l) => (l.status || '').toLowerCase() === 'new').length,
+  processing: data.filter((l) => (l.status || '').toLowerCase() === 'processing').length,
+  approved: data.filter((l) => (l.status || '').toLowerCase() === 'approved').length,
+  rejected: data.filter((l) => (l.status || '').toLowerCase() === 'rejected').length,
+  callback: data.filter((l) => (l.status || '').toLowerCase() === 'callback').length,
+  spam: data.filter((l) => (l.status || '').toLowerCase() === 'spam').length,
+  verification: data.filter((l) => (l.status || '').toLowerCase() === 'verification').length,
+  delivered: data.filter((l) => (l.status || '').toLowerCase() === 'delivered').length,
+  returned: data.filter((l) => (l.status || '').toLowerCase() === 'returned').length,
+};
+
       setLeadStats(counts);
     }
 
