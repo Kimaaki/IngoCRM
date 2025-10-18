@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,6 +18,7 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
+  // Buscar leads da base
   async function fetchLeads() {
     setLoading(true);
     const { data, error } = await supabase
@@ -29,14 +30,7 @@ export default function LeadsPage() {
     setLoading(false);
   }
 
-  async function updateStatus(id: string, newStatus: string) {
-    const { error } = await supabase
-      .from("leads")
-      .update({ status: newStatus })
-      .eq("id", id);
-    if (error) console.error("Erro ao atualizar status:", error);
-  }
-
+  // Buscar + Escutar mudanças em tempo real
   useEffect(() => {
     fetchLeads();
 
@@ -45,7 +39,10 @@ export default function LeadsPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "leads" },
-        () => fetchLeads()
+        (payload) => {
+          console.log("Mudança detectada:", payload);
+          fetchLeads();
+        }
       )
       .subscribe();
 
@@ -54,6 +51,7 @@ export default function LeadsPage() {
     };
   }, []);
 
+  // Filtrar leads pelo nome/email/telefone
   const filteredLeads = leads.filter(
     (lead) =>
       lead.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -77,6 +75,7 @@ export default function LeadsPage() {
         Gerencie e acompanhe todos os leads e seus status em tempo real.
       </p>
 
+      {/* Campo de busca */}
       <div className="flex justify-between items-center mb-6">
         <Input
           placeholder="🔍 Pesquisar lead por nome, email ou telefone..."
@@ -114,37 +113,20 @@ export default function LeadsPage() {
                     timeStyle: "short",
                   })}
                 </p>
-                {/* ID (discreto) para teste de rota direta */}
-                <p className="text-[10px] text-gray-400 mt-1 select-all">
-                  ID: {lead.id}
-                </p>
 
-                {/* Ações */}
-                <div className="flex justify-between items-center mt-4">
-                  <div className="flex flex-wrap gap-2">
-                    {["new", "approved", "rejected", "callback", "spam", "verification"].map(
-                      (status) => (
-                        <Button
-                          key={status}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateStatus(lead.id, status)}
-                        >
-                          {status}
-                        </Button>
-                      )
-                    )}
-                  </div>
-
-                  <div className="flex gap-2">
-                    {/* Usando Link do Next para garantir navegação */}
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href={`/leads/${lead.id}`}>👁️ Ver</Link>
+                <div className="flex justify-between mt-4">
+                  <Link href={`/leads/${lead.id}`}>
+                    <Button variant="default" size="sm">
+                      👁️ Ver Detalhes
                     </Button>
-                    <Button size="sm" asChild>
-                      <Link href={`/leads/${lead.id}?edit=true`}>✏️ Editar</Link>
-                    </Button>
-                  </div>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigator.clipboard.writeText(lead.phone || "")}
+                  >
+                    📞 Copiar Telefone
+                  </Button>
                 </div>
               </CardContent>
             </Card>
