@@ -43,7 +43,7 @@ import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/layout/Header";
 import EditDialog from "../components/dialogs/EditDialog";
 
-// Mocks e utils
+// Mocks e utils  (⚠️ CORRIGIDO: mock-data.ts com hífen)
 import {
   mockUsers,
   mockLeads,
@@ -59,7 +59,7 @@ import {
   mockTickets,
   mockMonitoringStatus,
   mockHistoryLogs,
-} from "../lib/mockData";
+} from "../lib/mock-data";
 
 import {
   getStatusColor,
