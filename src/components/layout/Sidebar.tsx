@@ -24,23 +24,28 @@ export default function Sidebar({
         IngoCRM
       </div>
 
-      {/* Menu lateral */}
-      <nav className="flex-1 px-4 py-6 space-y-1">
+      {/* Navegação */}
+      <nav className="flex-1 mt-4 space-y-2 px-4">
         {items.map((item) => (
           <button
             key={item.key}
             onClick={() => setActiveTab(item.key)}
-            className={`flex items-center w-full gap-3 px-3 py-2 rounded-md text-sm transition ${
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
               activeTab === item.key
-                ? "bg-white/10 text-white"
-                : "text-gray-400 hover:text-white hover:bg-white/5"
+                ? "bg-gray-800 text-white font-medium"
+                : "text-gray-400 hover:bg-gray-800 hover:text-white"
             }`}
           >
             {item.icon}
-            {item.label}
+            <span>{item.label}</span>
           </button>
         ))}
       </nav>
+
+      {/* Rodapé simples */}
+      <div className="border-t border-gray-800 p-4 text-xs text-gray-500 text-center">
+        © 2025 IngoCRM
+      </div>
     </aside>
   );
 }
