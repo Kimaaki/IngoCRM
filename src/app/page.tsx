@@ -1001,7 +1001,7 @@ export default function IngoCRM() {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar (o teu componente já existe no projeto) */}
-      <Sidebar />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Overlay mobile */}
       {sidebarOpen && (
