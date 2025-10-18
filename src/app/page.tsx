@@ -43,7 +43,7 @@ import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/layout/Header";
 import EditDialog from "../components/dialogs/EditDialog";
 
-// Mocks e utils  (⚠️ CORRIGIDO: mock-data.ts com hífen)
+// Mocks e utils  (⚠️ mock-data.ts com hífen)
 import {
   mockUsers,
   mockLeads,
@@ -77,7 +77,7 @@ const supabase = createClient(
 );
 
 /* ============================
-   Tipos simples (quando útil)
+   Tipos simples
 ============================= */
 type Lead = {
   id: string;
@@ -99,22 +99,27 @@ type Lead = {
 };
 
 /* ============================
-   Componentes auxiliares
+   DashboardCounters (AGORA CLICÁVEL)
 ============================= */
-
-function DashboardCounters({ leadStats }: { leadStats: Record<string, number> }) {
+function DashboardCounters({
+  leadStats,
+  onStatusClick,
+}: {
+  leadStats: Record<string, number>;
+  onStatusClick: (status: Lead["status"] | null) => void;
+}) {
   const items = useMemo(
     () => [
-      { label: "Total Leads", value: leadStats.total ?? 0, icon: <Target className="h-4 w-4 text-muted-foreground" /> },
-      { label: "New", value: leadStats.new ?? 0 },
-      { label: "Processing", value: leadStats.processing ?? 0 },
-      { label: "Approved", value: leadStats.approved ?? 0, cls: "text-green-600" },
-      { label: "Rejected", value: leadStats.rejected ?? 0, cls: "text-red-600" },
-      { label: "Callback", value: leadStats.callback ?? 0, cls: "text-yellow-600" },
-      { label: "Spam", value: leadStats.spam ?? 0, cls: "text-gray-500" },
-      { label: "Verification", value: leadStats.verification ?? 0, cls: "text-blue-600" },
-      { label: "Delivered", value: leadStats.delivered ?? 0, cls: "text-emerald-600" },
-      { label: "Returned", value: leadStats.returned ?? 0, cls: "text-amber-600" },
+      { key: null as Lead["status"] | null, label: "Total Leads", value: leadStats.total ?? 0, icon: <Target className="h-4 w-4 text-muted-foreground" /> },
+      { key: "new" as const, label: "New", value: leadStats.new ?? 0 },
+      { key: "processing" as const, label: "Processing", value: leadStats.processing ?? 0 },
+      { key: "approved" as const, label: "Approved", value: leadStats.approved ?? 0, cls: "text-green-600" },
+      { key: "rejected" as const, label: "Rejected", value: leadStats.rejected ?? 0, cls: "text-red-600" },
+      { key: "callback" as const, label: "Callback", value: leadStats.callback ?? 0, cls: "text-yellow-600" },
+      { key: "spam" as const, label: "Spam", value: leadStats.spam ?? 0, cls: "text-gray-500" },
+      { key: "verification" as const, label: "Verification", value: leadStats.verification ?? 0, cls: "text-blue-600" },
+      { key: "delivered" as const, label: "Delivered", value: leadStats.delivered ?? 0, cls: "text-emerald-600" },
+      { key: "returned" as const, label: "Returned", value: leadStats.returned ?? 0, cls: "text-amber-600" },
     ],
     [leadStats]
   );
@@ -122,7 +127,12 @@ function DashboardCounters({ leadStats }: { leadStats: Record<string, number> })
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-6">
       {items.map((it) => (
-        <Card key={it.label}>
+        <Card
+          key={it.label}
+          className="cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => onStatusClick(it.key)}
+          role="button"
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{it.label}</CardTitle>
             {it.icon}
@@ -141,10 +151,16 @@ function DashboardCounters({ leadStats }: { leadStats: Record<string, number> })
    Seções / Módulos
 ============================= */
 
-function DashboardContent({ leadStats }: { leadStats: Record<string, number> }) {
+function DashboardContent({
+  leadStats,
+  onStatusClick,
+}: {
+  leadStats: Record<string, number>;
+  onStatusClick: (status: Lead["status"] | null) => void;
+}) {
   return (
     <div className="space-y-6">
-      <DashboardCounters leadStats={leadStats} />
+      <DashboardCounters leadStats={leadStats} onStatusClick={onStatusClick} />
       <Card>
         <CardHeader>
           <CardTitle>Visão Geral</CardTitle>
@@ -160,7 +176,7 @@ function DashboardContent({ leadStats }: { leadStats: Record<string, number> }) 
   );
 }
 
-function LeadsContent() {
+function LeadsContent({ filterStatus }: { filterStatus: Lead["status"] | null }) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -171,13 +187,14 @@ function LeadsContent() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Erro ao carregar leads:", error);
-      // fallback para mocks (se a tabela ainda não existir)
-      setLeads((mockLeads as unknown as Lead[]) ?? []);
-    } else {
-      setLeads((data as unknown as Lead[]) ?? []);
+    let rows: Lead[] = error ? ((mockLeads as unknown as Lead[]) ?? []) : ((data as unknown as Lead[]) ?? []);
+
+    // FILTRO vindo do card clicado no topo
+    if (filterStatus) {
+      rows = rows.filter((l) => (l.status || "").toLowerCase() === filterStatus.toLowerCase());
     }
+
+    setLeads(rows);
     setLoading(false);
   }
 
@@ -194,11 +211,20 @@ function LeadsContent() {
       .on("postgres_changes", { event: "*", schema: "public", table: "leads" }, fetchLeads)
       .subscribe();
     return () => supabase.removeChannel(subscription);
-  }, []);
+    // quando filterStatus muda, recarrega
+  }, [filterStatus]);
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">📋 Leads</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">📋 Leads</h2>
+        {filterStatus && (
+          <div className="text-sm text-gray-600">
+            Filtro ativo: <Badge className="ml-2 capitalize">{filterStatus}</Badge>
+          </div>
+        )}
+      </div>
+
       {loading ? (
         <p>Carregando leads...</p>
       ) : (
@@ -359,7 +385,6 @@ function OrdersContent() {
 }
 
 function CallModeContent() {
-  // Sem mockCalls no teu pacote original – mostramos uma lista simples fictícia baseada nos leads
   const demoCalls = (mockLeads as any[]).slice(0, 6).map((l, i) => ({
     id: `call_${i}`,
     lead_name: l.name || `Lead ${i + 1}`,
@@ -447,7 +472,6 @@ function CallCentersContent() {
                 <div className="space-y-2">
                   {center.agents.map((agentId) => {
                     const agent = mockUsers.find((u) => u.id === agentId);
-                    // status fictício apenas para exibir
                     const statuses = ["available", "busy", "break"] as const;
                     const status = statuses[agentId.length % 3];
                     const callsToday = (agentId.length % 5) + 3;
@@ -906,7 +930,7 @@ function HistoryContent() {
   );
 }
 
-/* Placeholders simples (ativos e visíveis) */
+/* Placeholders simples */
 const AnalyticsContent = () => (
   <Card><CardHeader><CardTitle>Analytics</CardTitle></CardHeader><CardContent>Em breve gráficos e KPIs.</CardContent></Card>
 );
@@ -953,6 +977,8 @@ export default function IngoCRM() {
     | "settings"
   >("dashboard");
 
+  const [filterStatus, setFilterStatus] = useState<Lead["status"] | null>(null);
+
   const [leadStats, setLeadStats] = useState<Record<string, number>>({
     total: 0,
     new: 0,
@@ -966,7 +992,7 @@ export default function IngoCRM() {
     returned: 0,
   });
 
-  // Contadores com Supabase (e fallback para mocks se a tabela ainda não existir)
+  // Contadores com Supabase (e fallback para mocks)
   useEffect(() => {
     async function load() {
       const { data, error } = await supabase.from("leads").select("status");
@@ -998,9 +1024,15 @@ export default function IngoCRM() {
     return () => supabase.removeChannel(ch);
   }, []);
 
+  // Clique nos cards do topo: aplica filtro e vai para "Leads"
+  function handleStatusClick(status: Lead["status"] | null) {
+    setFilterStatus(status);       // null = sem filtro / Total
+    setActiveTab("leads");         // navega para a aba Leads automaticamente
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar (o teu componente já existe no projeto) */}
+      {/* Sidebar */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Overlay mobile */}
@@ -1012,12 +1044,12 @@ export default function IngoCRM() {
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         <Header />
 
-        {/* Painel de status dos leads */}
+        {/* Painel de status dos leads (agora com clique para filtrar) */}
         <div className="p-4 bg-white shadow-sm border-b">
-          <DashboardCounters leadStats={leadStats} />
+          <DashboardCounters leadStats={leadStats} onStatusClick={handleStatusClick} />
         </div>
 
-        {/* Navegação simples (se quiseres controlar as tabs sem depender do Sidebar) */}
+        {/* Navegação rápida (mantida) */}
         <div className="flex gap-2 p-4 overflow-x-auto bg-white border-b">
           {[
             ["dashboard", "Dashboard"],
@@ -1053,8 +1085,8 @@ export default function IngoCRM() {
 
         {/* Conteúdo */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
-          {activeTab === "dashboard" && <DashboardContent leadStats={leadStats} />}
-          {activeTab === "leads" && <LeadsContent />}
+          {activeTab === "dashboard" && <DashboardContent leadStats={leadStats} onStatusClick={handleStatusClick} />}
+          {activeTab === "leads" && <LeadsContent filterStatus={filterStatus} />}
           {activeTab === "orders" && <OrdersContent />}
           {activeTab === "call-mode" && <CallModeContent />}
           {activeTab === "call-centers" && <CallCentersContent />}
@@ -1104,7 +1136,7 @@ export default function IngoCRM() {
         </main>
       </div>
 
-      {/* Dialog genérico já existente no teu projeto */}
+      {/* Dialog genérico */}
       <EditDialog />
     </div>
   );
