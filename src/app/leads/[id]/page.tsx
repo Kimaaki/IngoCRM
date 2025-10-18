@@ -21,7 +21,11 @@ export default function LeadDetailPage() {
 
   async function fetchLead() {
     setLoading(true);
-    const { data, error } = await supabase.from("leads").select("*").eq("id", id).single();
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("id", id)
+      .single();
     if (error) console.error("Erro ao carregar lead:", error);
     else setLead(data);
     setLoading(false);
@@ -90,14 +94,11 @@ export default function LeadDetailPage() {
           <div className="flex justify-between items-center mt-6">
             <Button
               variant="destructive"
-              onClick={() => alert(`📞 Ligando para ${lead.phone}...`)}
+              onClick={() => alert(`📞 Ligando para ${lead.phone || "—"}...`)}
             >
               📞 Ligar
             </Button>
-            <Button
-              onClick={() => alert("📴 Chamada finalizada.")}
-              variant="outline"
-            >
+            <Button onClick={() => alert("📴 Chamada finalizada.")} variant="outline">
               📴 Desligar
             </Button>
             <Button
