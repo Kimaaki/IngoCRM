@@ -32,7 +32,7 @@ export default function LeadDetailPage() {
     if (id) fetchLead();
   }, [id]);
 
-  // Função para salvar alterações
+  // Salvar alterações
   async function handleSave() {
     setSaving(true);
     const { error } = await supabase
@@ -53,7 +53,7 @@ export default function LeadDetailPage() {
     setSaving(false);
   }
 
-  // Funções de ligação
+  // Ligar / Desligar
   async function handleCall(action: "call" | "hangup") {
     await supabase.from("lead_calls").insert([
       {
@@ -65,8 +65,8 @@ export default function LeadDetailPage() {
     alert(action === "call" ? "📞 Ligação iniciada" : "🔚 Ligação encerrada");
   }
 
-  if (loading) return <p>Carregando...</p>;
-  if (!lead) return <p>Lead não encontrado.</p>;
+  if (loading) return <p className="p-6">Carregando...</p>;
+  if (!lead) return <p className="p-6">Lead não encontrado.</p>;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -133,7 +133,7 @@ export default function LeadDetailPage() {
             </div>
           </div>
 
-          {/* Ações */}
+          {/* Botões de ação */}
           <div className="flex justify-between items-center mt-6">
             <div className="flex gap-3">
               <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleCall("call")}>
