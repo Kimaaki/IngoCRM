@@ -47,10 +47,7 @@ export default function LeadsPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "leads" },
-        (payload) => {
-          console.log("Mudança detectada:", payload);
-          fetchLeads();
-        }
+        () => fetchLeads()
       )
       .subscribe();
 
@@ -59,7 +56,7 @@ export default function LeadsPage() {
     };
   }, []);
 
-  // Filtrar leads pelo nome/email/telefone
+  // Filtrar leads
   const filteredLeads = leads.filter(
     (lead) =>
       lead.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -100,7 +97,11 @@ export default function LeadsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredLeads.map((lead) => (
-            <Card key={lead.id} className="p-4 shadow-md">
+            <Card
+              key={lead.id}
+              onClick={() => (window.location.href = `/leads/${lead.id}`)}
+              className="p-4 shadow-md cursor-pointer hover:shadow-lg transition"
+            >
               <CardContent>
                 <div className="flex justify-between items-center">
                   <h2 className="font-semibold text-lg">{lead.name || "Sem nome"}</h2>
@@ -129,7 +130,10 @@ export default function LeadsPage() {
                         key={status}
                         variant="outline"
                         size="sm"
-                        onClick={() => updateStatus(lead.id, status)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // evita abrir o lead ao clicar num botão
+                          updateStatus(lead.id, status);
+                        }}
                       >
                         {status}
                       </Button>
