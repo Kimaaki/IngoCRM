@@ -1,120 +1,152 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase-browser";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { createClient } from "@supabase/supabase-js";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
-type Lead = {
-  id: string;
-  name: string | null;
-  email: string | null;
-  phone: string | null;
-  country: string | null;
-  status: "new" | "approved" | "rejected" | "spam" | "callback";
-  created_at: string;
-};
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function LeadsDashboard() {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [leads, setLeads] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [comment, setComment] = useState("");
+  const [editingLead, setEditingLead] = useState<any | null>(null);
 
-  async function fetchLeads() {
+  // Carregar leads
+  async function loadLeads() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("leads")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (!error) setLeads((data || []) as Lead[]);
+    const { data, error } = await supabase.from("leads").select("*");
+    if (!error && data) setLeads(data);
     setLoading(false);
   }
 
-  async function updateStatus(id: string, newStatus: Lead["status"]) {
-    const { error } = await supabase.from("leads").update({ status: newStatus }).eq("id", id);
-    if (!error) {
-      setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
-    }
+  // Registrar chamada (ligar/desligar)
+  async function registerCall(lead_id: string, action: "call" | "hangup") {
+    await supabase.from("lead_calls").insert({
+      lead_id,
+      action,
+      by_user: "Admin",
+    });
+    alert(`Ação registrada: ${action === "call" ? "Ligou" : "Desligou"}`);
+  }
+
+  // Salvar comentário no lead
+  async function saveComment(lead_id: string) {
+    await supabase
+      .from("lead_notes")
+      .insert({ lead_id, note: comment, by_user: "Admin" });
+    alert("Comentário salvo!");
+    setComment("");
+  }
+
+  // Atualizar dados do lead (endereço/cidade/etc)
+  async function updateLead(lead: any) {
+    await supabase
+      .from("leads")
+      .update({
+        address: lead.address,
+        city: lead.city,
+        postal_code: lead.postal_code,
+      })
+      .eq("id", lead.id);
+    alert("Lead atualizado!");
+    setEditingLead(null);
+    loadLeads();
   }
 
   useEffect(() => {
-    fetchLeads();
-
-    // Realtime updates
-    const channel = supabase
-      .channel("leads-changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "leads" }, (_payload) => {
-        fetchLeads();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    loadLeads();
   }, []);
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">📋 Leads</h1>
+      <h1 className="text-2xl font-bold mb-4">Leads</h1>
 
       {loading ? (
-        <p>Carregando leads...</p>
-      ) : leads.length === 0 ? (
-        <p>Sem leads ainda.</p>
+        <p>Carregando...</p>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {leads.map((lead) => (
-            <Card key={lead.id} className="p-4 shadow-lg">
-              <CardHeader>
-                <h2 className="font-semibold">{lead.name || "Sem nome"}</h2>
-                <p className="text-sm text-gray-500">{lead.email || "—"}</p>
-                <p className="text-sm">{lead.phone || "—"}</p>
+        leads.map((lead) => (
+          <Card key={lead.id} className="shadow-sm">
+            <CardHeader>
+              <CardTitle>{lead.name || "Sem nome"}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Email: {lead.email}</p>
+              <p>Telefone: {lead.phone}</p>
+              <p>Endereço: {lead.address || "—"}</p>
+              <p>Cidade: {lead.city || "—"}</p>
+              <p>CEP: {lead.postal_code || "—"}</p>
 
-                <Badge
-                  className={`mt-2 ${
-                    lead.status === "approved"
-                      ? "bg-green-500"
-                      : lead.status === "rejected"
-                      ? "bg-red-500"
-                      : lead.status === "spam"
-                      ? "bg-gray-500"
-                      : lead.status === "callback"
-                      ? "bg-yellow-500"
-                      : "bg-blue-500"
-                  }`}
+              <div className="mt-3 flex gap-2">
+                <Button onClick={() => registerCall(lead.id, "call")}>
+                  📞 Ligar
+                </Button>
+                <Button onClick={() => registerCall(lead.id, "hangup")}>
+                  🔚 Desligar
+                </Button>
+                <Button onClick={() => setEditingLead(lead)}>✏️ Editar</Button>
+              </div>
+
+              {/* Campo para comentários */}
+              <div className="mt-3">
+                <textarea
+                  placeholder="Adicionar comentário..."
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="w-full border rounded p-2"
+                />
+                <Button
+                  className="mt-2"
+                  onClick={() => saveComment(lead.id)}
+                  disabled={!comment.trim()}
                 >
-                  {lead.status}
-                </Badge>
-              </CardHeader>
+                  💾 Salvar comentário
+                </Button>
+              </div>
 
-              <CardContent>
-                <p className="text-sm mb-3 text-gray-600">País: {lead.country || "—"}</p>
-                <p className="text-xs text-gray-400">
-                  Criado:{" "}
-                  {new Date(lead.created_at).toLocaleString("pt-PT", {
-                    dateStyle: "short",
-                    timeStyle: "short",
-                  })}
-                </p>
-
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {(["approved", "rejected", "spam", "callback", "new"] as Lead["status"][]).map(
-                    (status) => (
-                      <Button
-                        key={status}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateStatus(lead.id, status)}
-                      >
-                        {status}
-                      </Button>
-                    )
-                  )}
+              {/* Se o operador clicar em editar */}
+              {editingLead?.id === lead.id && (
+                <div className="mt-4 border-t pt-3">
+                  <input
+                    type="text"
+                    placeholder="Endereço"
+                    className="w-full border rounded p-2 mb-2"
+                    value={editingLead.address || ""}
+                    onChange={(e) =>
+                      setEditingLead({ ...editingLead, address: e.target.value })
+                    }
+                  />
+                  <input
+                    type="text"
+                    placeholder="Cidade"
+                    className="w-full border rounded p-2 mb-2"
+                    value={editingLead.city || ""}
+                    onChange={(e) =>
+                      setEditingLead({ ...editingLead, city: e.target.value })
+                    }
+                  />
+                  <input
+                    type="text"
+                    placeholder="Código Postal"
+                    className="w-full border rounded p-2 mb-2"
+                    value={editingLead.postal_code || ""}
+                    onChange={(e) =>
+                      setEditingLead({
+                        ...editingLead,
+                        postal_code: e.target.value,
+                      })
+                    }
+                  />
+                  <Button onClick={() => updateLead(editingLead)}>✅ Salvar</Button>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              )}
+            </CardContent>
+          </Card>
+        ))
       )}
     </div>
   );
