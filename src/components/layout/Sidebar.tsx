@@ -20,7 +20,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     <aside className="hidden lg:flex flex-col w-64 bg-[#0b1623] text-white h-screen border-r border-gray-800">
       {/* Título do CRM */}
       <div className="flex items-center justify-center h-16 text-xl font-bold border-b border-gray-800">
-        IngoCRM
+        ECentril 
       </div>
 
       {/* Menu */}
@@ -42,7 +42,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       </nav>
 
       <div className="p-4 border-t border-gray-800 text-xs text-gray-500 text-center">
-        © 2025 IngoCRM
+        © 2025 ECentril
       </div>
     </aside>
   );
