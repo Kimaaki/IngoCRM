@@ -42,7 +42,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       </nav>
 
       <div className="p-4 border-t border-gray-800 text-xs text-gray-500 text-center">
-        © 2025 ECentril
+        © 2025 ECentril Global CRM
       </div>
     </aside>
   );
