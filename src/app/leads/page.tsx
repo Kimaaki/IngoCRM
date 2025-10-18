@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,12 +14,10 @@ const supabase = createClient(
 );
 
 export default function LeadsPage() {
-  const router = useRouter();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // Buscar leads da base
   async function fetchLeads() {
     setLoading(true);
     const { data, error } = await supabase
@@ -31,7 +29,6 @@ export default function LeadsPage() {
     setLoading(false);
   }
 
-  // Atualizar status de lead
   async function updateStatus(id: string, newStatus: string) {
     const { error } = await supabase
       .from("leads")
@@ -40,7 +37,6 @@ export default function LeadsPage() {
     if (error) console.error("Erro ao atualizar status:", error);
   }
 
-  // Buscar + Escutar mudanças em tempo real
   useEffect(() => {
     fetchLeads();
 
@@ -49,10 +45,7 @@ export default function LeadsPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "leads" },
-        (payload) => {
-          console.log("Mudança detectada:", payload);
-          fetchLeads();
-        }
+        () => fetchLeads()
       )
       .subscribe();
 
@@ -61,7 +54,6 @@ export default function LeadsPage() {
     };
   }, []);
 
-  // Filtrar leads pelo nome/email/telefone
   const filteredLeads = leads.filter(
     (lead) =>
       lead.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -85,7 +77,6 @@ export default function LeadsPage() {
         Gerencie e acompanhe todos os leads e seus status em tempo real.
       </p>
 
-      {/* Campo de busca */}
       <div className="flex justify-between items-center mb-6">
         <Input
           placeholder="🔍 Pesquisar lead por nome, email ou telefone..."
@@ -123,8 +114,12 @@ export default function LeadsPage() {
                     timeStyle: "short",
                   })}
                 </p>
+                {/* ID (discreto) para teste de rota direta */}
+                <p className="text-[10px] text-gray-400 mt-1 select-all">
+                  ID: {lead.id}
+                </p>
 
-                {/* Botões de ação */}
+                {/* Ações */}
                 <div className="flex justify-between items-center mt-4">
                   <div className="flex flex-wrap gap-2">
                     {["new", "approved", "rejected", "callback", "spam", "verification"].map(
@@ -142,18 +137,12 @@ export default function LeadsPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => router.push(`/leads/${lead.id}`)}
-                    >
-                      👁️ Ver
+                    {/* Usando Link do Next para garantir navegação */}
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href={`/leads/${lead.id}`}>👁️ Ver</Link>
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => router.push(`/leads/${lead.id}?edit=true`)}
-                    >
-                      ✏️ Editar
+                    <Button size="sm" asChild>
+                      <Link href={`/leads/${lead.id}?edit=true`}>✏️ Editar</Link>
                     </Button>
                   </div>
                 </div>
