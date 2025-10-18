@@ -2,13 +2,12 @@
 
 import { Home, Users, ShoppingCart, Settings, Phone } from "lucide-react";
 
-export default function Sidebar({
-  activeTab,
-  setActiveTab,
-}: {
+interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-}) {
+}
+
+export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const items = [
     { key: "dashboard", label: "Dashboard", icon: <Home className="h-4 w-4" /> },
     { key: "leads", label: "Leads", icon: <Users className="h-4 w-4" /> },
@@ -18,32 +17,31 @@ export default function Sidebar({
   ];
 
   return (
-    <aside className="hidden lg:flex lg:flex-col w-64 bg-[#0b1623] text-white h-screen border-r border-gray-800">
+    <aside className="hidden lg:flex flex-col w-64 bg-[#0b1623] text-white h-screen border-r border-gray-800">
       {/* Título do CRM */}
       <div className="flex items-center justify-center h-16 text-xl font-bold border-b border-gray-800">
         IngoCRM
       </div>
 
-      {/* Navegação */}
-      <nav className="flex-1 mt-4 space-y-2 px-4">
+      {/* Menu */}
+      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
         {items.map((item) => (
           <button
             key={item.key}
             onClick={() => setActiveTab(item.key)}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+            className={`w-full flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${
               activeTab === item.key
-                ? "bg-gray-800 text-white font-medium"
-                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                ? "bg-gray-800 text-white"
+                : "text-gray-300 hover:bg-gray-700 hover:text-white"
             }`}
           >
             {item.icon}
-            <span>{item.label}</span>
+            <span className="text-sm font-medium">{item.label}</span>
           </button>
         ))}
       </nav>
 
-      {/* Rodapé simples */}
-      <div className="border-t border-gray-800 p-4 text-xs text-gray-500 text-center">
+      <div className="p-4 border-t border-gray-800 text-xs text-gray-500 text-center">
         © 2025 IngoCRM
       </div>
     </aside>
