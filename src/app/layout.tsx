@@ -1,7 +1,5 @@
 "use client";
 
-// 🔹 Mantém tudo o que o Lasy criou
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -20,20 +18,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Criado com a Lasy",
-  description: "Projeto criado com Lasy AI",
-};
-
-// 🔹 Client layout — ativa React do lado do cliente
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   const pathname = usePathname();
 
-  // Mostra no console quando há mudança de página
   useEffect(() => {
     console.log("🚀 Página atual:", pathname);
   }, [pathname]);
@@ -42,6 +33,8 @@ export default function RootLayout({
     <html lang="pt-BR">
       <head>
         <Script src="/lasy-bridge.js" strategy="beforeInteractive" />
+        <title>Criado com a Lasy</title>
+        <meta name="description" content="Projeto criado com Lasy AI" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
