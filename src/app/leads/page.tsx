@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -19,16 +22,20 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // 🔄 Carrega leads
   async function fetchLeads() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("leads")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) console.error("Erro ao buscar leads:", error);
-    else setLeads(data || []);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setLeads(data || []);
+    } catch (e) {
+      console.error("Erro ao carregar leads:", e);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -39,25 +46,28 @@ export default function LeadsPage() {
     lead.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // 🔘 Ações
-  const handleView = (id: string) => {
-    console.log("Abrindo lead:", id);
-    router.push(`/leads/${id}`);
+  const handleView = async (id: string) => {
+    try {
+      router.push(`/leads/${id}`);
+    } catch (e) {
+      console.error("Erro ao abrir lead:", e);
+    }
   };
 
-  const handleEdit = (id: string) => {
-    console.log("Editando lead:", id);
-    router.push(`/leads/${id}?edit=true`);
+  const handleEdit = async (id: string) => {
+    try {
+      router.push(`/leads/${id}?edit=true`);
+    } catch (e) {
+      console.error("Erro ao editar lead:", e);
+    }
   };
 
-  const handleNewLead = () => {
-    console.log("Novo lead");
-    router.push("/leads/new");
+  const handleNewLead = async () => {
+    alert("Funcionalidade de novo lead será adicionada em breve.");
   };
 
-  const handleExport = () => {
-    console.log("Exportar leads...");
-    alert("Exportação ainda não implementada");
+  const handleExport = async () => {
+    alert("Exportação de leads ainda não implementada.");
   };
 
   return (
@@ -89,7 +99,10 @@ export default function LeadsPage() {
       ) : (
         <div className="grid gap-4">
           {filteredLeads.map((lead) => (
-            <Card key={lead.id} className="hover:shadow-lg transition">
+            <Card
+              key={lead.id}
+              className="hover:shadow-lg transition cursor-pointer"
+            >
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <h2 className="font-semibold">{lead.name}</h2>
