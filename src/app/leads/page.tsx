@@ -18,7 +18,6 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // Buscar leads da base
   async function fetchLeads() {
     setLoading(true);
     const { data, error } = await supabase
@@ -30,28 +29,19 @@ export default function LeadsPage() {
     setLoading(false);
   }
 
-  // Buscar + Escutar mudanças em tempo real
   useEffect(() => {
     fetchLeads();
-
     const subscription = supabase
       .channel("leads-changes")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "leads" },
-        (payload) => {
-          console.log("Mudança detectada:", payload);
-          fetchLeads();
-        }
+        () => fetchLeads()
       )
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(subscription);
-    };
+    return () => supabase.removeChannel(subscription);
   }, []);
 
-  // Filtrar leads pelo nome/email/telefone
   const filteredLeads = leads.filter(
     (lead) =>
       lead.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -71,14 +61,9 @@ export default function LeadsPage() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">📋 Leads</h1>
-      <p className="text-gray-500 mb-6">
-        Gerencie e acompanhe todos os leads e seus status em tempo real.
-      </p>
-
-      {/* Campo de busca */}
       <div className="flex justify-between items-center mb-6">
         <Input
-          placeholder="🔍 Pesquisar lead por nome, email ou telefone..."
+          placeholder="Pesquisar lead..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-md"
@@ -94,39 +79,22 @@ export default function LeadsPage() {
           {filteredLeads.map((lead) => (
             <Card key={lead.id} className="p-4 shadow-md">
               <CardContent>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center mb-2">
                   <h2 className="font-semibold text-lg">{lead.name || "Sem nome"}</h2>
                   <Badge className={`${statusColors[lead.status] || "bg-blue-500"}`}>
                     {lead.status}
                   </Badge>
                 </div>
-
-                <p className="text-sm text-gray-600 mt-1">{lead.email}</p>
+                <p className="text-sm text-gray-600">{lead.email}</p>
                 <p className="text-sm text-gray-600">{lead.phone}</p>
-                <p className="text-sm text-gray-600 mt-2">
-                  País: {lead.country || "—"}
-                </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Criado:{" "}
-                  {new Date(lead.created_at).toLocaleString("pt-PT", {
-                    dateStyle: "short",
-                    timeStyle: "short",
-                  })}
+                  Criado: {new Date(lead.created_at).toLocaleString("pt-PT")}
                 </p>
 
-                <div className="flex justify-between mt-4">
+                <div className="flex justify-end mt-4">
                   <Link href={`/leads/${lead.id}`}>
-                    <Button variant="default" size="sm">
-                      👁️ Ver Detalhes
-                    </Button>
+                    <Button variant="outline" size="sm">👁️ Ver / Editar</Button>
                   </Link>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigator.clipboard.writeText(lead.phone || "")}
-                  >
-                    📞 Copiar Telefone
-                  </Button>
                 </div>
               </CardContent>
             </Card>
