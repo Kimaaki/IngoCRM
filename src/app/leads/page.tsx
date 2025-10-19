@@ -1,8 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
@@ -29,7 +26,7 @@ export default function LeadsPage() {
       .from("leads")
       .select("*")
       .order("created_at", { ascending: false });
-    if (error) console.error(error);
+    if (error) console.error("Erro ao buscar leads:", error);
     else setLeads(data || []);
     setLoading(false);
   }
@@ -42,7 +39,7 @@ export default function LeadsPage() {
     lead.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // 🔘 Ações dos botões
+  // 🔘 Ações
   const handleView = (id: string) => {
     console.log("Abrindo lead:", id);
     router.push(`/leads/${id}`);
@@ -58,11 +55,11 @@ export default function LeadsPage() {
     router.push("/leads/new");
   };
 
-  const handleExport = async () => {
-    alert("Função de exportar ainda não implementada.");
+  const handleExport = () => {
+    console.log("Exportar leads...");
+    alert("Exportação ainda não implementada");
   };
 
-  // 🧱 Interface
   return (
     <div className="p-6 space-y-6">
       {/* Cabeçalho */}
