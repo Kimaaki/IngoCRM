@@ -1,5 +1,9 @@
 "use client";
 
+// 🔴 MUITO IMPORTANTE: força a rota dinâmica a renderizar no pedido (nada de SSG)
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
@@ -20,11 +24,16 @@ export default function LeadDetailPage() {
   const [saving, setSaving] = useState(false);
 
   async function fetchLead() {
-    const { data } = await supabase.from("leads").select("*").eq("id", id).single();
-    setLead(data);
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (!error) setLead(data);
   }
 
   async function handleSave() {
+    if (!lead) return;
     setSaving(true);
     await supabase.from("leads").update(lead).eq("id", id);
     setSaving(false);
@@ -33,6 +42,7 @@ export default function LeadDetailPage() {
 
   useEffect(() => {
     fetchLead();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   if (!lead) return <p className="p-6">Carregando dados do cliente...</p>;
@@ -106,3 +116,4 @@ export default function LeadDetailPage() {
     </div>
   );
 }
+
