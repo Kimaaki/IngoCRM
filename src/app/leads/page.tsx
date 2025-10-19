@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
@@ -19,19 +22,15 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // 🔄 Carrega os leads do Supabase
+  // 🔄 Carrega leads
   async function fetchLeads() {
     setLoading(true);
     const { data, error } = await supabase
       .from("leads")
       .select("*")
       .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Erro ao carregar leads:", error);
-    } else {
-      setLeads(data || []);
-    }
+    if (error) console.error(error);
+    else setLeads(data || []);
     setLoading(false);
   }
 
@@ -39,44 +38,34 @@ export default function LeadsPage() {
     fetchLeads();
   }, []);
 
-  // 🔍 Filtro de busca
   const filteredLeads = leads.filter((lead) =>
     lead.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // 🧭 Navegação
+  // 🔘 Ações dos botões
   const handleView = (id: string) => {
+    console.log("Abrindo lead:", id);
     router.push(`/leads/${id}`);
   };
 
   const handleEdit = (id: string) => {
+    console.log("Editando lead:", id);
     router.push(`/leads/${id}?edit=true`);
   };
 
   const handleNewLead = () => {
-    router.push(`/leads/new`);
+    console.log("Novo lead");
+    router.push("/leads/new");
   };
 
   const handleExport = async () => {
-    try {
-      const response = await fetch("/api/export-leads");
-      if (!response.ok) throw new Error("Falha ao exportar leads.");
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "leads.csv";
-      a.click();
-    } catch (error) {
-      console.error(error);
-      alert("Erro ao exportar leads.");
-    }
+    alert("Função de exportar ainda não implementada.");
   };
 
-  // 🖼 Renderização principal
+  // 🧱 Interface
   return (
     <div className="p-6 space-y-6">
-      {/* Título e botões de ação */}
+      {/* Cabeçalho */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Leads</h1>
         <div className="flex gap-3">
@@ -95,7 +84,7 @@ export default function LeadsPage() {
         className="max-w-sm"
       />
 
-      {/* Lista de leads */}
+      {/* Lista */}
       {loading ? (
         <p>Carregando leads...</p>
       ) : filteredLeads.length === 0 ? (
@@ -103,10 +92,7 @@ export default function LeadsPage() {
       ) : (
         <div className="grid gap-4">
           {filteredLeads.map((lead) => (
-            <Card
-              key={lead.id}
-              className="hover:shadow-md transition cursor-pointer"
-            >
+            <Card key={lead.id} className="hover:shadow-lg transition">
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <h2 className="font-semibold">{lead.name}</h2>
