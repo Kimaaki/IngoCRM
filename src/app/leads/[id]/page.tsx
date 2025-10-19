@@ -1,3 +1,4 @@
+// FILE: src/app/leads/[id]/page.tsx
 "use client";
 
 export const dynamic = "force-dynamic";
@@ -17,49 +18,55 @@ const supabase = createClient(
 );
 
 export default function LeadDetailPage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [lead, setLead] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   async function fetchLead() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("leads")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) console.error("Erro ao buscar lead:", error);
-    else setLead(data);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (error) throw error;
+      setLead(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function saveLead() {
     if (!lead) return;
-    setSaving(true);
-
-    const { error } = await supabase
-      .from("leads")
-      .update({
-        name: lead.name,
-        phone: lead.phone,
-        email: lead.email,
-        country: lead.country,
-        city: lead.city,
-        postal_code: lead.postal_code,
-        address: lead.address,
-        status: lead.status,
-        notes: lead.notes,
-      })
-      .eq("id", id);
-
-    setSaving(false);
-    if (error) console.error("Erro ao salvar lead:", error);
-    else {
+    try {
+      setSaving(true);
+      const { error } = await supabase
+        .from("leads")
+        .update({
+          name: lead.name,
+          phone: lead.phone,
+          email: lead.email,
+          country: lead.country,
+          city: lead.city,
+          postal_code: lead.postal_code,
+          address: lead.address,
+          status: lead.status,
+          notes: lead.notes,
+        })
+        .eq("id", id);
+      if (error) throw error;
       alert("Lead atualizado com sucesso!");
       router.push("/leads");
+    } catch (err) {
+      console.error(err);
+      alert("Falha ao atualizar lead.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -67,7 +74,7 @@ export default function LeadDetailPage() {
     fetchLead();
   }, [id]);
 
-  if (loading) return <p>Carregando...</p>;
+  if (loading) return <p>Carregando…</p>;
   if (!lead) return <p>Lead não encontrado.</p>;
 
   return (
