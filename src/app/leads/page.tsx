@@ -28,6 +28,7 @@ export default function LeadsPage() {
       .from("leads")
       .select("*")
       .order("created_at", { ascending: false });
+
     if (error) console.error("Erro ao buscar leads:", error);
     else setLeads(data || []);
     setLoading(false);
@@ -105,7 +106,6 @@ export default function LeadsPage() {
                     {lead.status || "new"}
                   </Badge>
                 </div>
-
                 <div className="flex gap-2">
                   <Button
                     size="sm"
