@@ -24,48 +24,42 @@ export default function LeadDetailPage() {
   const [saving, setSaving] = useState(false);
 
   async function fetchLead() {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("leads")
-        .select("*")
-        .eq("id", id)
-        .single();
-      if (error) throw error;
-      setLead(data);
-    } catch (e) {
-      console.error("Erro ao buscar lead:", e);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) console.error("Erro ao buscar lead:", error);
+    else setLead(data);
+    setLoading(false);
   }
 
   async function saveLead() {
     if (!lead) return;
-    try {
-      setSaving(true);
-      const { error } = await supabase
-        .from("leads")
-        .update({
-          name: lead.name,
-          phone: lead.phone,
-          email: lead.email,
-          country: lead.country,
-          city: lead.city,
-          postal_code: lead.postal_code,
-          address: lead.address,
-          status: lead.status,
-          notes: lead.notes,
-        })
-        .eq("id", id);
-      if (error) throw error;
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("leads")
+      .update({
+        name: lead.name,
+        phone: lead.phone,
+        email: lead.email,
+        country: lead.country,
+        city: lead.city,
+        postal_code: lead.postal_code,
+        address: lead.address,
+        status: lead.status,
+        notes: lead.notes,
+      })
+      .eq("id", id);
+
+    setSaving(false);
+    if (error) console.error("Erro ao salvar lead:", error);
+    else {
       alert("Lead atualizado com sucesso!");
       router.push("/leads");
-    } catch (e) {
-      console.error("Erro ao salvar lead:", e);
-      alert("Erro ao salvar lead.");
-    } finally {
-      setSaving(false);
     }
   }
 
