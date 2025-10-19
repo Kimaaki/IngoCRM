@@ -20,64 +20,85 @@ export default function LeadDetailPage() {
   const [saving, setSaving] = useState(false);
 
   async function fetchLead() {
-    const { data, error } = await supabase.from("leads").select("*").eq("id", id).single();
-    if (error) console.error(error);
-    else setLead(data);
+    const { data } = await supabase.from("leads").select("*").eq("id", id).single();
+    setLead(data);
   }
 
   async function handleSave() {
     setSaving(true);
-    const { error } = await supabase.from("leads").update(lead).eq("id", id);
-    if (error) alert("Erro ao salvar: " + error.message);
-    else alert("✅ Alterações salvas com sucesso!");
+    await supabase.from("leads").update(lead).eq("id", id);
     setSaving(false);
+    alert("✅ Dados salvos com sucesso!");
   }
 
   useEffect(() => {
     fetchLead();
   }, [id]);
 
-  if (!lead) return <p>Carregando lead...</p>;
+  if (!lead) return <p className="p-6">Carregando dados do cliente...</p>;
 
   return (
-    <div className="p-8">
-      <Card className="max-w-2xl mx-auto">
+    <div className="p-6 max-w-3xl mx-auto">
+      <Card>
         <CardHeader>
-          <CardTitle>🧾 Detalhes do Lead</CardTitle>
+          <CardTitle>🧾 Pedido #{lead.id}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Input
-            value={lead.name || ""}
-            onChange={(e) => setLead({ ...lead, name: e.target.value })}
-            placeholder="Nome do cliente"
-          />
-          <Input
-            value={lead.phone || ""}
-            onChange={(e) => setLead({ ...lead, phone: e.target.value })}
-            placeholder="Telefone"
-          />
-          <Input
-            value={lead.email || ""}
-            onChange={(e) => setLead({ ...lead, email: e.target.value })}
-            placeholder="E-mail"
-          />
-          <Input
-            value={lead.country || ""}
-            onChange={(e) => setLead({ ...lead, country: e.target.value })}
-            placeholder="País"
-          />
-          <Textarea
-            value={lead.notes || ""}
-            onChange={(e) => setLead({ ...lead, notes: e.target.value })}
-            placeholder="Comentários ou observações"
-          />
+          <div>
+            <label>Nome</label>
+            <Input
+              value={lead.name || ""}
+              onChange={(e) => setLead({ ...lead, name: e.target.value })}
+            />
+          </div>
+          <div>
+            <label>Telefone</label>
+            <Input
+              value={lead.phone || ""}
+              onChange={(e) => setLead({ ...lead, phone: e.target.value })}
+            />
+          </div>
+          <div>
+            <label>Email</label>
+            <Input
+              value={lead.email || ""}
+              onChange={(e) => setLead({ ...lead, email: e.target.value })}
+            />
+          </div>
+          <div>
+            <label>Endereço</label>
+            <Textarea
+              value={lead.address || ""}
+              onChange={(e) => setLead({ ...lead, address: e.target.value })}
+            />
+          </div>
+          <div>
+            <label>Produto / Offer</label>
+            <Input
+              value={lead.offer || ""}
+              onChange={(e) => setLead({ ...lead, offer: e.target.value })}
+            />
+          </div>
+          <div>
+            <label>Status</label>
+            <Input
+              value={lead.status || ""}
+              onChange={(e) => setLead({ ...lead, status: e.target.value })}
+            />
+          </div>
 
-          <div className="flex justify-between items-center pt-4">
+          <div className="flex gap-3 mt-6">
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? "Salvando..." : "💾 Salvar alterações"}
+              💾 {saving ? "Salvando..." : "Salvar"}
             </Button>
             <Button variant="outline" onClick={() => router.push("/leads")}>
               ⬅️ Voltar
+            </Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => window.open(`tel:${lead.phone}`)}
+            >
+              ☎️ Ligar
             </Button>
           </div>
         </CardContent>
