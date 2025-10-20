@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+// Import all available fonts for AI usage
 import "../lib/fonts";
 import { Toaster } from "sonner";
 
@@ -16,14 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IngoCRM",
-  description: "CRM avançado desenvolvido com Lasy AI",
-  icons: {
-    icon: "/icon.png", // Caminho do teu ícone
-    shortcut: "/icon.png",
-    apple: "/icon.png",
-  },
-  themeColor: "#000000",
+  title: "Criado com a Lasy",
+  description: "Projeto criado com Lasy AI",
 };
 
 export default function RootLayout({
@@ -31,6 +26,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR">
+      <head>{/* Lasy bridge removido para não bloquear cliques */}</head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <Toaster />
