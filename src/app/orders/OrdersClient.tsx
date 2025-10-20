@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 type Order = {
   id: string;
@@ -12,17 +19,13 @@ type Order = {
   product: string | null;
   status: string | null;
   amount: number | null;
-  created_at: string | null;
+  created_at?: string | null;
 };
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export default function OrdersClient() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [rows, setRows] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -31,67 +34,100 @@ export default function OrdersClient() {
         .from("orders")
         .select("*")
         .order("created_at", { ascending: false });
-      if (!error && data) setOrders(data as Order[]);
+      if (!error) setRows((data ?? []) as Order[]);
       setLoading(false);
     })();
   }, []);
 
-  function exportCSV() {
-    const rows = [
-      ["id", "client", "product", "status", "amount", "created_at"],
-      ...orders.map((o) => [
-        o.id,
-        o.client ?? "",
-        o.product ?? "",
-        o.status ?? "",
-        o.amount ?? "",
-        o.created_at ?? "",
-      ]),
-    ];
-    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return rows;
+    return rows.filter((o) =>
+      [o.id, o.client ?? "", o.product ?? "", o.status ?? ""]
+        .join(" ")
+        .toLowerCase()
+        .includes(s)
+    );
+  }, [rows, q]);
+
+  const exportCsv = () => {
+    const headers = ["id", "client", "product", "status", "amount", "created_at"];
+    const lines = [headers.join(",")].concat(
+      rows.map((r) =>
+        [
+          r.id,
+          JSON.stringify(r.client ?? ""),
+          JSON.stringify(r.product ?? ""),
+          JSON.stringify(r.status ?? ""),
+          r.amount ?? "",
+          JSON.stringify(r.created_at ?? ""),
+        ].join(",")
+      )
+    );
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = "orders.csv";
     a.click();
     URL.revokeObjectURL(url);
-  }
+  };
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Orders</h1>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={exportCSV}>⬇ Export</Button>
-          {/* IMPORTANTE: Link ao invés de router.push */}
-          <Link href="/orders/new"><Button>➕ New Order</Button></Link>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold">Orders</h1>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportCsv}>⬇ Export</Button>
+          <Button asChild>
+            <Link href="/orders/new">➕ New Order</Link>
+          </Button>
         </div>
       </div>
 
+      <Input
+        placeholder="Search by client, product, status…"
+        className="max-w-md"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+      />
+
       {loading ? (
-        <p>Carregando…</p>
-      ) : orders.length === 0 ? (
-        <p>Nenhum pedido encontrado.</p>
+        <p>Loading…</p>
+      ) : filtered.length === 0 ? (
+        <p>No orders.</p>
       ) : (
-        <div className="grid gap-4">
-          {orders.map((o) => (
-            <Card key={o.id} className="hover:shadow-md transition">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <div className="font-semibold">{o.client || "—"}</div>
-                  <div className="text-sm text-muted-foreground">{o.product || "—"}</div>
-                  <div className="text-sm text-muted-foreground">
-                    Status: {o.status || "—"} • Valor: {o.amount ?? "—"}
+        <div className="grid gap-3">
+          {filtered.map((o) => (
+            <Card key={o.id} className="hover:shadow-sm transition">
+              <CardContent className="p-4 flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{o.client ?? "—"}</div>
+                  <div className="text-sm text-muted-foreground truncate">
+                    {o.product ?? "—"} · ${o.amount ?? 0}
+                  </div>
+                  <div className="mt-1">
+                    <Badge
+                      variant={
+                        o.status === "delivered"
+                          ? "success"
+                          : o.status === "rejected"
+                          ? "destructive"
+                          : "secondary"
+                      }
+                    >
+                      {o.status ?? "new"}
+                    </Badge>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Link href={`/orders/${o.id}`}>
-                    <Button variant="outline" size="sm">👁 Ver</Button>
-                  </Link>
-                  <Link href={`/orders/${o.id}?edit=1`}>
-                    <Button size="sm">✏️ Editar</Button>
-                  </Link>
+
+                <div className="flex shrink-0 gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/orders/${o.id}`}>👁 View</Link>
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link href={`/orders/${o.id}?edit=1`}>✏️ Edit</Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
